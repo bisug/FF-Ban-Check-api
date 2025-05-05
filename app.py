@@ -39,8 +39,8 @@ def check_banned(player_id):
             period = data.get("period", 0)
 
             result = {
-                "credits": "@Tanhung11231",
-                "channel": "https://t.me/sharecodevn",
+                "credits": "@dear_sumi",
+                "channel": "https://t.me/dear_sumi",
                 "status": "BANNED" if is_banned else "NOT BANNED",
                 "ban_period": period if is_banned else 0,
                 "uid": player_id,
