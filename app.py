@@ -1,8 +1,10 @@
 from flask import Flask, request, Response
 import requests
 import json
+from werkzeug.middleware.proxy_fix import ProxyFix  # This must come before usage
 
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app)
 
 VALID_API_KEYS = {
     "summertime": "active"
@@ -20,7 +22,7 @@ def validate_api_key(api_key):
     if status == "banned":
         return {"error": "API key is banned", "status_code": 403}
     
-    return {"valid": True} 
+    return {"valid": True}
 
 def check_banned(player_id):
     url = f"https://ff.garena.com/api/antihack/check_banned?lang=en&uid={player_id}"
@@ -77,5 +79,6 @@ def check_key():
 
     return Response(json.dumps({"status": "valid", "key_status": VALID_API_KEYS.get(api_key, "unknown")}), mimetype="application/json")
 
-if __name__ == "__main__":
-    app.run(debug=True)
+# DO NOT run app here — Vercel will call this handler
+def handler(environ, start_response):
+    return app(environ, start_response)
