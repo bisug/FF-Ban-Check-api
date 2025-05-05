@@ -5,7 +5,8 @@ import json
 app = Flask(__name__)
 
 VALID_API_KEYS = {
-    "summertime": "active"
+    "FC": "active", 
+    "FreeKey": "active"
 }
 
 def validate_api_key(api_key):
