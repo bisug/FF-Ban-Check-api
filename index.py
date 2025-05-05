@@ -1,10 +1,8 @@
 from flask import Flask, request, Response
 import requests
 import json
-from werkzeug.middleware.proxy_fix import ProxyFix  # This must come before usage
 
 app = Flask(__name__)
-app.wsgi_app = ProxyFix(app.wsgi_app)
 
 VALID_API_KEYS = {
     "summertime": "active"
@@ -15,13 +13,11 @@ def validate_api_key(api_key):
         return {"error": "API key is missing", "status_code": 401}
     if api_key not in VALID_API_KEYS:
         return {"error": "Invalid API key", "status_code": 401}
-    
     status = VALID_API_KEYS[api_key]
     if status == "inactive":
         return {"error": "API key is changed", "status_code": 403}
     if status == "banned":
         return {"error": "API key is banned", "status_code": 403}
-    
     return {"valid": True}
 
 def check_banned(player_id):
@@ -32,7 +28,6 @@ def check_banned(player_id):
         "referer": "https://ff.garena.com/en/support/",
         "x-requested-with": "B6FksShzIgjfrYImLpTsadjS86sddhFH"
     }
-
     try:
         response = requests.get(url, headers=headers)
         if response.status_code == 200:
@@ -59,26 +54,17 @@ def check_banned(player_id):
 def bancheck():
     api_key = request.args.get("key", "")
     player_id = request.args.get("uid", "")
-
     key_validation = validate_api_key(api_key)
     if "error" in key_validation:
         return Response(json.dumps(key_validation), mimetype="application/json")
-
     if not player_id:
         return Response(json.dumps({"error": "Player ID is required", "status_code": 400}), mimetype="application/json")
-
     return check_banned(player_id)
 
 @app.route("/check_key", methods=["GET"])
 def check_key():
     api_key = request.args.get("key", "")
-
     key_validation = validate_api_key(api_key)
     if "error" in key_validation:
         return Response(json.dumps(key_validation), mimetype="application/json")
-
     return Response(json.dumps({"status": "valid", "key_status": VALID_API_KEYS.get(api_key, "unknown")}), mimetype="application/json")
-
-# DO NOT run app here — Vercel will call this handler
-def handler(environ, start_response):
-    return app(environ, start_response)
