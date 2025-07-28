@@ -4,23 +4,6 @@ import json
 
 app = Flask(__name__)
 
-VALID_API_KEYS = {
-    "FC": "active", 
-    "FreeKey": "active"
-}
-
-def validate_api_key(api_key):
-    if not api_key:
-        return {"error": "API key is missing", "status_code": 401}
-    if api_key not in VALID_API_KEYS:
-        return {"error": "Invalid API key", "status_code": 401}
-    status = VALID_API_KEYS[api_key]
-    if status == "inactive":
-        return {"error": "API key is changed", "status_code": 403}
-    if status == "banned":
-        return {"error": "API key is banned", "status_code": 403}
-    return {"valid": True}
-
 def check_banned(player_id):
     url = f"https://ff.garena.com/api/antihack/check_banned?lang=en&uid={player_id}"
     headers = {
@@ -38,7 +21,7 @@ def check_banned(player_id):
 
             result = {
                 "credits": "@dear_sumi",
-                "channel": "https://t.me/dear_sumi",
+                "free repo": "https://github.com/bisug/FF-Ban-Check-api",
                 "status": "BANNED" if is_banned else "NOT BANNED",
                 "ban_period": period if is_banned else 0,
                 "uid": player_id,
@@ -53,19 +36,7 @@ def check_banned(player_id):
 
 @app.route("/bancheck", methods=["GET"])
 def bancheck():
-    api_key = request.args.get("key", "")
     player_id = request.args.get("uid", "")
-    key_validation = validate_api_key(api_key)
-    if "error" in key_validation:
-        return Response(json.dumps(key_validation), mimetype="application/json")
     if not player_id:
         return Response(json.dumps({"error": "Player ID is required", "status_code": 400}), mimetype="application/json")
     return check_banned(player_id)
-
-@app.route("/check_key", methods=["GET"])
-def check_key():
-    api_key = request.args.get("key", "")
-    key_validation = validate_api_key(api_key)
-    if "error" in key_validation:
-        return Response(json.dumps(key_validation), mimetype="application/json")
-    return Response(json.dumps({"status": "valid", "key_status": VALID_API_KEYS.get(api_key, "unknown")}), mimetype="application/json")
